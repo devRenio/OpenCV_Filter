@@ -1,0 +1,136 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Type checkers / linters
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# =========================
+# Virtual environments
+# =========================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# =========================
+# Streamlit
+# =========================
+.streamlit/secrets.toml
+.streamlit/credentials.toml
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# =========================
+# IDE / Editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.cursor/
+
+# =========================
+# OS-generated files
+# =========================
+# Windows
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.Trash-*
+
+# =========================
+# Project-specific
+# =========================
+# Sample / output media (uncomment if you want to ignore generated artifacts)
+# samples/
+# outputs/
+# *.png
+# *.jpg
+# *.jpeg
+# *.bmp
+# *.webp
+
+# Logs
+logs/
+*.log
+
+# Local secrets / configs
+secrets.toml
+config.local.*
