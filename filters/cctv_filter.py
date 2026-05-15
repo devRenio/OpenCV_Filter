@@ -114,20 +114,56 @@ class CCTVFilter(BaseFilter):
         return out
 
     @staticmethod
-    def _draw_timestamp(canvas: np.ndarray) -> None:
+    def _adaptive_scale(canvas: np.ndarray) -> float:
+        """Pick a font scale proportional to the image's short side.
+
+        At ~500px the scale is 1.0; the result is clamped to a
+        readable range so very small thumbnails do not get unreadable
+        sub-pixel text and 4K frames do not get giant overlays.
+        """
+        h, w = canvas.shape[:2]
+        return float(max(0.8, min(3.0, min(h, w) / 500.0)))
+
+    @classmethod
+    def _draw_timestamp(cls, canvas: np.ndarray) -> None:
         """Burn the current local date/time into the bottom-left corner."""
         text = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         h, _ = canvas.shape[:2]
+        scale = cls._adaptive_scale(canvas) * 1.1
+        thickness = max(2, int(round(scale * 1.8)))
+        margin_x = int(round(scale * 18))
+        margin_y = int(round(scale * 22))
         font = cv2.FONT_HERSHEY_SIMPLEX
-        scale = 0.6
-        thickness = 1
+        origin = (margin_x, h - margin_y)
         # Black outline + white text -> readable on any background.
-        cv2.putText(canvas, text, (12, h - 14), font, scale, (0, 0, 0), thickness + 2, cv2.LINE_AA)
-        cv2.putText(canvas, text, (12, h - 14), font, scale, (255, 255, 255), thickness, cv2.LINE_AA)
+        cv2.putText(canvas, text, origin, font, scale, (0, 0, 0), thickness + 3, cv2.LINE_AA)
+        cv2.putText(canvas, text, origin, font, scale, (255, 255, 255), thickness, cv2.LINE_AA)
 
-    @staticmethod
-    def _draw_rec_indicator(canvas: np.ndarray) -> None:
+    @classmethod
+    def _draw_rec_indicator(cls, canvas: np.ndarray) -> None:
         """Draw a red dot + 'REC' label in the top-right corner."""
         h, w = canvas.shape[:2]
-        cv2.circle(canvas, (w - 60, 24), 7, (0, 0, 200), thickness=-1, lineType=cv2.LINE_AA)
-        cv2.putText(canvas, "REC", (w - 45, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
+        scale = cls._adaptive_scale(canvas) * 1.3
+        thickness = max(2, int(round(scale * 2.2)))
+        radius = max(8, int(round(scale * 10)))
+        margin_x = int(round(scale * 18))
+        margin_y = int(round(scale * 18))
+
+        # Approximate the width of "REC" so the circle sits to its left.
+        (text_w, text_h), baseline = cv2.getTextSize(
+            "REC", cv2.FONT_HERSHEY_SIMPLEX, scale, thickness
+        )
+        text_origin = (w - margin_x - text_w, margin_y + text_h)
+        circle_center = (text_origin[0] - radius - int(scale * 6), margin_y + text_h - radius // 2)
+
+        cv2.circle(canvas, circle_center, radius, (0, 0, 220), thickness=-1, lineType=cv2.LINE_AA)
+        cv2.putText(
+            canvas, "REC", text_origin,
+            cv2.FONT_HERSHEY_SIMPLEX, scale,
+            (0, 0, 0), thickness + 3, cv2.LINE_AA,
+        )
+        cv2.putText(
+            canvas, "REC", text_origin,
+            cv2.FONT_HERSHEY_SIMPLEX, scale,
+            (255, 255, 255), thickness, cv2.LINE_AA,
+        )

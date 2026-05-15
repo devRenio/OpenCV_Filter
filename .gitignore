@@ -118,6 +118,10 @@ $RECYCLE.BIN/
 # =========================
 # Project-specific
 # =========================
+# Auto-downloaded model files (Haar XML는 opencv-python에 포함되어 있어
+# 별도 캐시 불필요. DNN/YuNet 모델은 face_mosaic_filter가 첫 사용 시 받음.)
+models/
+
 # Sample / output media (uncomment if you want to ignore generated artifacts)
 # samples/
 # outputs/

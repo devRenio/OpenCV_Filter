@@ -1,0 +1,286 @@
+================================================================================
+OpenCV 이미지 필터 웹 어플리케이션 - 보고서용 요약
+================================================================================
+
+■ 프로젝트 개요
+- 목적: OpenCV와 Streamlit을 활용한 확장 가능한 실시간 이미지 필터 웹앱
+- 아키텍처: OOP 기반 Registry 패턴 (새 필터 추가 시 코드 수정 불필요)
+- 입력 방식: 이미지 업로드 / 웹캠 실시간 스트리밍 (WebRTC)
+- 총 필터 수: 22개
+
+================================================================================
+1. 필터별 제작 목적
+================================================================================
+
+[기본 색상 변환]
+• 흑백: 컬러 이미지를 그레이스케일로 변환하여 명암 분석 및 예술적 표현
+• 감성 흑백: 대비 강화 + 비네팅 + 필름 그레인으로 영화적/감성적 흑백 표현
+• 색상 반전: 네거티브 효과로 특수 시각 효과 또는 의료 영상 분석 활용
+• 세피아: 고전 사진 느낌의 따뜻한 갈색 톤 구현
+
+[색상 조작]
+• 특정 색상 강조: 선택한 색상만 컬러로 유지하고 나머지는 흑백 처리 (컬러 스플래시)
+
+[스타일라이즈]
+• 야간투시경: 군사/영화에서 보는 녹색 야간투시경 시뮬레이션
+• CCTV 스타일: 감시 카메라 느낌의 저화질 + 타임스탬프 오버레이
+• 만화 스타일: 색상 단순화 + 외곽선 추출로 일러스트/만화 느낌
+• 스케치 효과: 연필 스케치처럼 보이는 예술적 변환
+• 홀로그램: SF 영화의 홀로그램 통신 효과 시뮬레이션
+• 글리치 효과: 디지털 글리치/VHS 깨짐 미학
+
+[블러/샤프닝]
+• 가우시안 블러: 노이즈 제거, 배경 흐림, 전처리용 평활화
+• 미디언 블러: Salt-and-pepper 노이즈 제거에 특화
+• 샤프닝: 엣지 강조로 이미지 선명도 향상
+• 틸트 시프트: 미니어처/장난감 세계 효과 (선택적 초점)
+
+[엣지 검출]
+• 엣지 검출 (Canny): 윤곽선 추출로 객체 경계 시각화
+• 엣지 강조: 원본 유지하면서 윤곽만 또렷하게
+• 이진화: 흑백 두 단계로 분할하여 문서 스캔, OCR 전처리
+
+[특수 효과]
+• 모자이크: 픽셀화로 프라이버시 보호 또는 레트로 게임 느낌
+• 얼굴 모자이크: 얼굴 자동 검출 후 해당 영역만 익명화
+• 얼굴 교환: 이미지 내 얼굴들을 서로 교환 (엔터테인먼트)
+• 거울/만화경: 대칭 효과로 예술적 패턴 생성
+
+================================================================================
+2. 사용한 주요 OpenCV 함수 설명
+================================================================================
+
+[색상 공간 변환]
+• cv2.cvtColor(img, cv2.COLOR_BGR2GRAY): BGR → 그레이스케일 변환
+• cv2.cvtColor(img, cv2.COLOR_BGR2HSV): BGR → HSV 변환 (색상 조작용)
+• cv2.cvtColor(img, cv2.COLOR_GRAY2BGR): 단일채널 → 3채널 BGR 복원
+
+[밝기/대비 조절]
+• cv2.convertScaleAbs(img, alpha, beta): 대비(alpha) × 픽셀값 + 밝기(beta)
+• cv2.addWeighted(img1, α, img2, β, γ): 두 이미지 가중 합성
+
+[블러/평활화]
+• cv2.GaussianBlur(img, ksize, sigmaX): 가우시안 커널로 블러
+• cv2.medianBlur(img, ksize): 중앙값 필터 (노이즈 제거)
+• cv2.bilateralFilter(img, d, sigmaColor, sigmaSpace): 엣지 보존 평활화
+
+[엣지 검출]
+• cv2.Canny(img, threshold1, threshold2): Canny 엣지 검출기
+• cv2.Laplacian(img, ddepth): 라플라시안 2차 미분 엣지
+• cv2.Sobel(img, ddepth, dx, dy): 소벨 1차 미분 (방향별)
+• cv2.Scharr(img, ddepth, dx, dy): 소벨보다 정확한 3x3 미분
+
+[임계값 처리]
+• cv2.threshold(img, thresh, maxval, type): 고정 임계값 이진화
+• cv2.adaptiveThreshold(img, maxval, method, type, blockSize, C): 적응형 임계값
+
+[형태학적 연산]
+• cv2.bitwise_not(img): 비트 반전 (네거티브)
+• cv2.bitwise_and(img1, img2): 비트 AND (마스킹)
+• cv2.bitwise_or(img1, img2): 비트 OR (마스크 합집합)
+
+[기하학적 변환]
+• cv2.resize(img, dsize, interpolation): 크기 조절
+• cv2.flip(img, flipCode): 좌우(1)/상하(0)/둘다(-1) 반전
+• cv2.warpAffine(img, M, dsize): 아핀 변환 (회전, 이동, 스케일)
+• cv2.remap(img, map_x, map_y, interpolation): 좌표 재매핑 (만화경 등)
+
+[색상 범위 필터링]
+• cv2.inRange(hsv, lower, upper): HSV 범위 내 픽셀 마스크 생성
+
+[이미지 합성]
+• cv2.seamlessClone(src, dst, mask, center, flag): 자연스러운 이미지 합성
+• cv2.transform(img, M): 픽셀별 행렬 변환 (세피아 등)
+
+[얼굴 검출]
+• cv2.CascadeClassifier: Haar Cascade 얼굴 검출기
+• cv2.dnn.readNetFromCaffe: DNN 모델 로드 (SSD 얼굴 검출)
+• cv2.FaceDetectorYN: YuNet ONNX 얼굴 검출기 (최신, 고정밀)
+• detectMultiScale(img, scaleFactor, minNeighbors): Haar 검출 실행
+• cv2.dnn.NMSBoxes: Non-Maximum Suppression으로 중복 박스 제거
+
+[그리기]
+• cv2.putText(img, text, org, font, scale, color, thickness): 텍스트 오버레이
+• cv2.rectangle(img, pt1, pt2, color, thickness): 사각형 그리기
+• cv2.circle(img, center, radius, color, thickness): 원 그리기
+• cv2.ellipse(img, center, axes, angle, ...): 타원 그리기 (마스크 생성)
+
+[채널 조작]
+• cv2.split(img): BGR → B, G, R 개별 채널 분리
+• cv2.merge([b, g, r]): 개별 채널 → BGR 합성
+
+================================================================================
+3. 필터별 처리 과정 설명
+================================================================================
+
+[흑백 (Grayscale)]
+입력(BGR) → cvtColor(BGR2GRAY) → (선택) 대비/밝기 조절 → cvtColor(GRAY2BGR) → 출력
+
+[감성 흑백 (Moody B&W)]
+입력 → 그레이스케일 변환 → convertScaleAbs(대비↑, 밝기↓)
+    → 가우시안 비네트 마스크 생성 → 픽셀별 곱셈
+    → np.random.normal로 그레인 노이즈 추가 → 출력
+
+[색상 반전 (Invert)]
+입력 → cv2.bitwise_not (255 - 픽셀값) → 출력
+
+[세피아 (Sepia)]
+입력(BGR) → cv2.transform(세피아 BGR 행렬) → 클리핑 → addWeighted(원본과 블렌딩) → 출력
+세피아 행렬: [[0.131, 0.534, 0.272],
+             [0.168, 0.686, 0.349],
+             [0.189, 0.769, 0.393]]
+
+[특정 색상 강조 (Color Isolation)]
+입력 → cvtColor(BGR2HSV) → inRange(선택 Hue 범위)로 마스크 생성
+    → GaussianBlur로 마스크 페더링
+    → 원본 컬러 × 마스크 + 그레이스케일 × (1-마스크) → 출력
+
+[야간투시경 (Night Vision)]
+입력 → 그레이스케일 → convertScaleAbs(광량 증폭)
+    → 가우시안 노이즈 추가 → 짝수 행 어둡게(스캔라인)
+    → 비네트 마스크 적용 → cv2.merge([0, gray, 0]) (G채널만) → 출력
+
+[CCTV 스타일]
+입력 → 그레이스케일 → resize(다운) → resize(업) [저해상도 시뮬]
+    → 노이즈 추가 → 스캔라인 추가
+    → putText(타임스탬프) → circle+putText(REC 인디케이터) → 출력
+
+[가우시안 블러]
+입력 → GaussianBlur(ksize, sigma) → 출력
+
+[미디언 블러]
+입력 → medianBlur(ksize) → 출력
+
+[샤프닝 (Unsharp Mask)]
+입력 → GaussianBlur로 블러 복사본 생성
+    → addWeighted(원본, 1+α, 블러, -α, 0) [원본 - 블러 = 엣지, 이를 원본에 더함]
+    → 출력
+
+[엣지 검출 (Canny)]
+입력 → 그레이스케일 → (선택) GaussianBlur 전처리
+    → Canny(threshold1, threshold2) → cvtColor(GRAY2BGR) → 출력
+
+[엣지 강조 (Edge Enhancement)]
+입력 → 그레이스케일 → Laplacian/Sobel/Scharr 중 선택 → 절댓값 → 정규화
+    → addWeighted(원본, 1.0, 엣지, strength, 0) → 출력
+
+[이진화 (Threshold)]
+입력 → 그레이스케일 → threshold(임계값, 255, BINARY/BINARY_INV/OTSU)
+    → cvtColor(GRAY2BGR) → 출력
+
+[만화 스타일 (Cartoon)]
+입력 → (다운샘플) → bilateralFilter × N회 [색상 단순화]
+    → 그레이스케일 → medianBlur → adaptiveThreshold [외곽선 마스크]
+    → bitwise_and(평활화된 컬러, 외곽선 마스크) → (업샘플) → 출력
+
+[스케치 효과 (Dodge Blend)]
+입력 → 그레이스케일 → bitwise_not(반전) → GaussianBlur
+    → cv2.divide(gray, 255-blur, scale=256) [컬러 닷지]
+    → (선택) 원본 컬러와 곱셈 [컬러 스케치] → 출력
+
+[모자이크 (Pixelate)]
+입력 → resize(작게, INTER_LINEAR) → resize(원본 크기, INTER_NEAREST) → 출력
+
+[얼굴 모자이크]
+입력 → (다운샘플) → 얼굴 검출(Haar/DNN/YuNet 중 선택)
+    → 검출 좌표를 원본 스케일로 복원 → 각 얼굴 ROI에 대해:
+      - 모자이크: resize(작게) → resize(크게)
+      - 블러: GaussianBlur
+      - 검은/흰 박스: np.zeros/np.full
+    → 출력
+
+[얼굴 교환 (Face Swap)]
+입력 → YuNet으로 얼굴 + 5점 랜드마크 검출
+    → getAffineTransform(소스 랜드마크 3점 → 타겟 랜드마크 3점)
+    → warpAffine으로 소스 얼굴을 타겟 위치에 정렬
+    → 타원 마스크 생성 → seamlessClone(NORMAL_CLONE)으로 자연스럽게 합성
+    → 출력
+
+[글리치 효과]
+입력 → split(B,G,R) → R을 오른쪽, B를 왼쪽으로 시프트 → merge
+    → 랜덤 y 위치에서 가로 슬라이스를 좌우로 이동
+    → 랜덤 위치에 노이즈 밴드(랜덤 픽셀) 오버레이
+    → 랜덤 블록의 색상 채널 부스트/감쇠 → 출력
+
+[틸트 시프트 (미니어처)]
+입력 → GaussianBlur로 전체 블러 버전 생성
+    → 초점 영역 기준 세로 그라데이션 마스크 생성 (중앙 1.0, 상하로 0.0)
+    → 원본 × 마스크 + 블러 × (1-마스크)
+    → HSV 변환 → S 채널 부스트 → BGR 변환 → 출력
+
+[거울/만화경]
+좌우대칭: 입력 → 한쪽 절반 추출 → flip(1) → 반대쪽에 배치
+상하대칭: 입력 → 한쪽 절반 추출 → flip(0) → 반대쪽에 배치
+4분할: 1/4 추출 → flip으로 나머지 3개 채움
+만화경: 입력 → 극좌표 변환 → 세그먼트 각도로 나눔 → 홀수 세그먼트 반전
+       → remap으로 좌표 재매핑 → 출력
+
+[홀로그램]
+입력 → B/G 채널 부스트, R 채널 감쇠 (시안 틴트)
+    → Laplacian 엣지 추출 → 블러 → 시안색 글로우로 addWeighted
+    → 약간 시프트된 복사본과 addWeighted (고스팅)
+    → 매 n번째 줄 어둡게 (스캔라인)
+    → 랜덤 밝기 변동 (플리커) → 출력
+
+================================================================================
+4. 원본 이미지와 결과 이미지 비교 가이드
+================================================================================
+
+※ 실제 비교 이미지는 앱 실행 후 스크린샷 캡처 필요
+※ 앱 UI에서 좌측에 원본, 우측에 필터 적용 결과가 나란히 표시됨
+
+[비교 시 관찰 포인트]
+
+• 흑백 계열: 색상 정보 제거 정도, 명암 대비, 분위기(감성 흑백의 비네팅/그레인)
+• 색상 조작: 색조 변화(세피아의 갈색, 야간투시경의 녹색), 선택 영역(컬러 스플래시)
+• 블러/샤프닝: 엣지 보존 정도, 노이즈 제거량, 선명도 변화
+• 엣지 검출: 윤곽선 검출 정확도, 임계값에 따른 디테일 변화
+• 스타일라이즈: 예술적 변환 정도(만화의 색상 단순화, 스케치의 선 표현)
+• 특수 효과: 왜곡 정도(글리치), 초점 영역(틸트 시프트), 대칭 패턴(만화경)
+• 얼굴 처리: 검출 정확도, 가림 방식별 익명화 효과, 얼굴 교환 자연스러움
+
+[권장 테스트 이미지]
+• 인물 사진: 얼굴 모자이크, 얼굴 교환, 감성 흑백, 스케치
+• 풍경 사진: 틸트 시프트, 세피아, 특정 색상 강조
+• 도시/건물: 만화 스타일, 엣지 검출, CCTV 스타일
+• 추상적 패턴: 거울/만화경, 글리치, 홀로그램
+
+================================================================================
+부록: 프로젝트 구조
+================================================================================
+
+OpenCV_Filter/
+├── app.py                      # Streamlit 메인 UI (업로드/웹캠 모드)
+├── requirements.txt            # 의존성 목록
+├── core/
+│   ├── __init__.py
+│   ├── base_filter.py          # BaseFilter 추상 클래스
+│   └── registry.py             # FilterRegistry 싱글톤 + @register 데코레이터
+├── filters/
+│   ├── __init__.py             # 자동 플러그인 디스커버리
+│   ├── none_filter.py          # 원본 (필터 없음)
+│   ├── grayscale_filter.py     # 흑백
+│   ├── moody_bw_filter.py      # 감성 흑백
+│   ├── invert_filter.py        # 색상 반전
+│   ├── sepia_filter.py         # 세피아
+│   ├── color_isolation_filter.py   # 특정 색상 강조
+│   ├── night_vision_filter.py  # 야간투시경
+│   ├── cctv_filter.py          # CCTV 스타일
+│   ├── gaussian_blur_filter.py # 가우시안 블러
+│   ├── median_blur_filter.py   # 미디언 블러
+│   ├── sharpen_filter.py       # 샤프닝
+│   ├── edge_enhancement_filter.py  # 엣지 강조
+│   ├── canny_edge_filter.py    # 엣지 검출 (Canny)
+│   ├── threshold_filter.py     # 이진화
+│   ├── cartoon_filter.py       # 만화 스타일
+│   ├── sketch_filter.py        # 스케치 효과
+│   ├── pixelate_filter.py      # 모자이크
+│   ├── face_mosaic_filter.py   # 얼굴 모자이크
+│   ├── face_swap_filter.py     # 얼굴 교환
+│   ├── glitch_filter.py        # 글리치 효과
+│   ├── tilt_shift_filter.py    # 틸트 시프트
+│   ├── mirror_filter.py        # 거울/만화경
+│   └── hologram_filter.py      # 홀로그램
+└── models/                     # DNN/YuNet 모델 자동 다운로드 위치 (gitignore)
+
+================================================================================
