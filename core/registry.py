@@ -68,14 +68,30 @@ class FilterRegistry:
         """Return a fresh instance of every registered filter.
 
         Returns:
-            A list of filter instances, sorted alphabetically by display
-            name to keep the UI ordering deterministic.
+            A list of filter instances, sorted by ``(order, name)`` so
+            that filters with a lower ``order`` value appear first and
+            ties are broken alphabetically by display name.
         """
-        return [cls() for _, cls in sorted(self._filters.items(), key=lambda kv: kv[0])]
+        return [cls() for cls in self._sorted_classes()]
 
     def get_filter_names(self) -> list[str]:
-        """Return all registered filter display names in sorted order."""
-        return sorted(self._filters.keys())
+        """Return all registered filter display names in UI order.
+
+        The ordering matches :meth:`get_all_filters` and is therefore
+        primary-sorted by each filter class's ``order`` attribute.
+        """
+        return [getattr(cls, "name", cls.__name__) for cls in self._sorted_classes()]
+
+    def _sorted_classes(self) -> list[Type[BaseFilter]]:
+        """Return registered classes sorted by ``(order, name)``."""
+
+        def sort_key(cls: Type[BaseFilter]) -> tuple[int, str]:
+            return (
+                int(getattr(cls, "order", 100)),
+                str(getattr(cls, "name", cls.__name__)),
+            )
+
+        return sorted(self._filters.values(), key=sort_key)
 
     def get_filter_by_name(self, name: str) -> BaseFilter:
         """Instantiate and return a registered filter looked up by name.

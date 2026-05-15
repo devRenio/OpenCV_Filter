@@ -25,10 +25,17 @@ class BaseFilter(ABC):
     Attributes:
         name: Human-readable display name shown in the UI.
         description: Short explanation of what the filter does.
+        order: Sort key used by the registry to control the position of
+            the filter inside the UI selectbox. Lower values appear
+            first; ties are broken alphabetically by ``name``. The
+            default of ``100`` places a filter in the middle, leaving
+            room for "header" filters (e.g. a passthrough) to use
+            ``0`` and category groupings to use sparse buckets.
     """
 
-    name: str = "Base Filter"
-    description: str = "Abstract base filter. Must be subclassed."
+    name: str = "기본 필터"
+    description: str = "추상 베이스 필터입니다. 서브클래스에서 구현해 주세요."
+    order: int = 100
 
     @abstractmethod
     def apply(self, image: np.ndarray, **kwargs: Any) -> np.ndarray:
